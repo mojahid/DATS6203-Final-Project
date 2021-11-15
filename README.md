@@ -1,5 +1,5 @@
 # DATS6203_Final_Project
-GWU Machine Learining Final Project - Detected Fake Images
+GWU Machine Learining II Final Project - Detected Fake Images
 
 This project is owned by Mina Hanna & Mojahid Osman. Below are the folders of this project:
 
