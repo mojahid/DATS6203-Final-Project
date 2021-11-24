@@ -38,9 +38,15 @@ import matplotlib.pyplot as plt
 ## 2- Few images has 0 or 1 kb size which is empty
 ##
 
+
 BASE_PATH = '/home/ubuntu/MLP/FinalProject/Data/'
 
 def get_photoshopped_images(image_name):
+    """ This function retrieve photoshopped images that corresponds to an original image.
+    The function returns a list of images in an array
+    Keyword arguments:
+    image_name -- name of the original image without extension
+    """
     img_data = []
     original_img_path = BASE_PATH + 'originals/'+ image_name +'.jpg'
     img = cv2.imread(original_img_path)
@@ -55,6 +61,11 @@ def get_photoshopped_images(image_name):
     return img_data
 
 def plot_image_set(img_data):
+    """ This function display a plot of  original and its corresponding photoshopped images provided in the imag_data.
+    Original image is the first image in the array
+    Keyword arguments:
+    img_data -- List of images coming get_photoshopped_images()
+    """
     frame_rgb = []
     f, axarr = plt.subplots(int(np.ceil(len(img_data)/2)), 2, figsize=(8, 8))
     switch = 0
