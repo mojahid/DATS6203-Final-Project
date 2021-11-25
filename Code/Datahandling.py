@@ -15,9 +15,9 @@ from torchvision import models
 from tqdm import tqdm
 import glob
 from shutil import copy
-import os
 import matplotlib.pyplot as plt
-##
+import os, os.path
+
 
 ## The data comes in two directories:
 ##  1- Original
@@ -85,17 +85,32 @@ def plot_image_set(img_data):
     plt.show()
     return
 
+def update_image_directories():
+    dir_src = r"/home/ubuntu/MLP/FinalProject/Data/photoshops/"
+    dir_dst = r"/home/ubuntu/MLP/FinalProject/Data/DataClasses/fake/"
+    original_count = 0
+    fake_count = 0
+    for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
+        copy(file, dir_dst)
+        fake_count = fake_count + 1
+    dir_src = r"/home/ubuntu/MLP/FinalProject/Data/originals/"
+    dir_dst = r"/home/ubuntu/MLP/FinalProject/Data/DataClasses/original/"
+    for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
+        copy(file, dir_dst)
+        original_count = original_count + 1
+    return original_count, fake_count
+
 #image_name = '141vnd'
 image_name = '100d24'
+#image_name = '1085it'
 
 img_data = get_photoshopped_images(image_name)
 plot_image_set(img_data)
+#original_count, fake_count = update_image_directories()
+#print(original_count)
+#print(fake_count)
+# simple version for working with CWD
 
-
-#dir_src = r"C:\Users\minaf\Documents\Images"
-#dir_dst = r"C:\Users\minaf\Documents\Destination"
-#for file in glob.iglob('%s/**/*.jpg' % dir_src, recursive=True):
-#    copy(file, dir_dst)
 
 
 ## Under the photoshopped directory, there are thousands of subdirectories that corr
