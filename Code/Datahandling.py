@@ -38,8 +38,7 @@ import os, os.path
 ## 2- Few images has 0 or 1 kb size which is empty
 ##
 
-
-BASE_PATH = '/home/ubuntu/MLP/FinalProject/Data/'
+BASE_PATH = '/home/ubuntu/MLP/DATS6203-Final-Project/Data/'
 
 def get_photoshopped_images(image_name):
     """ This function retrieve photoshopped images that corresponds to an original image.
@@ -86,33 +85,56 @@ def plot_image_set(img_data):
     return
 
 def update_image_directories():
-    dir_src = r"/home/ubuntu/MLP/FinalProject/Data/photoshops/"
-    dir_dst = r"/home/ubuntu/MLP/FinalProject/Data/DataClasses/fake/"
+    dir_src = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/photoshops/"
+    dir_dst = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/fake/"
     original_count = 0
     fake_count = 0
     for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
         copy(file, dir_dst)
         fake_count = fake_count + 1
-    dir_src = r"/home/ubuntu/MLP/FinalProject/Data/originals/"
-    dir_dst = r"/home/ubuntu/MLP/FinalProject/Data/DataClasses/original/"
+    dir_src = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/originals/"
+    dir_dst = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/original/"
     for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
         copy(file, dir_dst)
         original_count = original_count + 1
     return original_count, fake_count
 
+
+def create_excel_image():
+    img_name_fake = []
+    img_path_fake = BASE_PATH + 'DataClasses' + os.path.sep + 'fake'
+    img_path_fake = glob.glob(os.path.join(img_path_fake, "*.jpg"))
+    for img in img_path_fake:
+        img = img.replace('/', '')
+        img_name_fake.append([img[54:],0])
+
+    df_fake = pd.DataFrame(img_name_fake, columns=['image_name', 'target'])
+
+    img_name_original = []
+    img_path_original = BASE_PATH + 'DataClasses' + os.path.sep + 'original'
+    img_path_original = glob.glob(os.path.join(img_path_original, "*.jpg"))
+    for img in img_path_original:
+        img = img.replace('/', '')
+        img_name_original.append([img[58:], 1])
+
+    df_original = pd.DataFrame(img_name_original, columns=['image_name', 'target'])
+    df_list =[df_fake,df_original]
+    df = pd.concat(df_list)
+    # shuffle the DataFrame rows
+    df = df.sample(frac=1)
+
+    return (df)
+
 #image_name = '141vnd'
-image_name = '100d24'
+#image_name = '100d24'
 #image_name = '1085it'
 
-img_data = get_photoshopped_images(image_name)
-plot_image_set(img_data)
+##img_data = get_photoshopped_images(image_name)
+##plot_image_set(img_data)
 #original_count, fake_count = update_image_directories()
 #print(original_count)
 #print(fake_count)
-# simple version for working with CWD
-
-
-
+#simple version for working with CWD
 ## Under the photoshopped directory, there are thousands of subdirectories that corr
 
-
+print(create_excel_image())
