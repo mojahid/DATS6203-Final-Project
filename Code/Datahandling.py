@@ -100,7 +100,7 @@ def update_image_directories():
     return original_count, fake_count
 
 
-def create_excel_image():
+def target_process():
     img_name_fake = []
     img_path_fake = BASE_PATH + 'DataClasses' + os.path.sep + 'fake'
     img_path_fake = glob.glob(os.path.join(img_path_fake, "*.jpg"))
