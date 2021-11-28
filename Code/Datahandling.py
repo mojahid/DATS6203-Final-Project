@@ -137,4 +137,4 @@ def target_process():
 #simple version for working with CWD
 ## Under the photoshopped directory, there are thousands of subdirectories that corr
 
-print(create_excel_image())
+print(target_process())
