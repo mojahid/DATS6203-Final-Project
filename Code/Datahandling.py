@@ -19,10 +19,12 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision import transforms
 from torchvision import models
 from tqdm import tqdm
+from sklearn.model_selection import train_test_split
 import glob
 from shutil import copy
 import matplotlib.pyplot as plt
 import os, os.path
+import Image_Augmentation
 
 
 TRAIN_DIR ='train'
@@ -99,47 +101,110 @@ def plot_image_set(img_data):
     plt.show()
     return
 
+    """ This function moves images from their original extracted location to the new location
+    without any sub folders in the photoshopped directory. It also ignores images below 12KB
+    Keyword arguments:
+    img_data -- List of images coming get_photoshopped_images()
+    """
 def update_image_directories():
     dir_src = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/photoshops/"
-    dir_dst = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/fake/"
+    dir_dst = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/photoshopped/"
     original_count = 0
     fake_count = 0
     for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
-        copy(file, dir_dst)
-        fake_count = fake_count + 1
+        if (os.path.getsize(file) > 12*1024) and (cv2.imread(file) is not None):
+            copy(file, dir_dst)
+            fake_count = fake_count + 1
     dir_src = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/originals/"
-    dir_dst = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/original/"
+    dir_dst = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/original/"
     for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
-        copy(file, dir_dst)
-        original_count = original_count + 1
+        if (os.path.getsize(file) > 12 * 1024) and (cv2.imread(file) is not None):
+            copy(file, dir_dst)
+            original_count = original_count + 1
     return original_count, fake_count
+
+def augmentation_resampling():
+    dir_src = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/original/"
+    for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
+        print(file)
+        img = Image_Augmentation.flip_crop_image(cv2.imread(file), -1)
+        new_name = os.path.splitext(file)[0]+'_1.jpg'
+        cv2.imwrite(new_name, img)
+        img = Image_Augmentation.flip_crop_image(cv2.imread(file), 0)
+        new_name = os.path.splitext(file)[0]+'_2.jpg'
+        cv2.imwrite(new_name, img)
+        img = Image_Augmentation.flip_crop_image(cv2.imread(file), 1)
+        new_name = os.path.splitext(file)[0]+'_3.jpg'
+        cv2.imwrite(new_name, img)
+        img = Image_Augmentation.rotate_image(cv2.imread(file))
+        new_name = os.path.splitext(file)[0]+'_4.jpg'
+        cv2.imwrite(new_name, img)
+    return
+
+def create_noise_analysis(img):
+    img2 = cv2.medianBlur(img, 3)
+    return img - img2
+
+def create_ela(img):
+    cv2.imwrite("temp.jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 95])
+    img2 = cv2.imread("temp.jpg")
+    cv2.imwrite("temp.jpg", img2, [cv2.IMWRITE_JPEG_QUALITY, 90])
+    img2 = cv2.imread("temp.jpg")
+    diff = 15 * cv2.absdiff(img, img2)
+    return diff
+
+def process_filter_on_data(filter,directory_name):
+    dir_src_1 = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/original/"
+    dir_dst_1 = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses" + directory_name +"/original/"
+
+    dir_src_2 = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/photoshopped/"
+    dir_dst_2 = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/" + directory_name + "/photoshopped/"
+    for file in glob.iglob('%s/**/*.*' % dir_src_1, recursive=True):
+        filename = os.path.basename(file)
+        filename = dir_dst_1 + filename
+        if filter == 'ela':
+            cv2.imwrite(filename,create_ela(cv2.imread(file)))
+        elif filter == 'noise':
+            cv2.imwrite(filename, create_noise_analysis(cv2.imread(file)))
+
+    for file in glob.iglob('%s/**/*.*' % dir_src_2, recursive=True):
+        filename = os.path.basename(file)
+        filename = dir_dst_2 + filename
+        if filter == 'ela':
+            cv2.imwrite(filename,create_ela(cv2.imread(file)))
+        elif filter == 'noise':
+            cv2.imwrite(filename, create_noise_analysis(cv2.imread(file)))
 
 
 def target_process():
     img_name_fake = []
-    img_path_fake = BASE_PATH + 'DataClasses' + os.path.sep + 'fake'
-    img_path_fake = glob.glob(os.path.join(img_path_fake, "*.jpg"))
+    img_path_fake = BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'photoshopped'
+    img_path_fake = glob.glob(os.path.join(img_path_fake, "*.*"))
     for img in img_path_fake:
         img = img.replace('/', '')
-        img_name_fake.append([img[54:],[0,1]])
+        img_name_fake.append([img[71:],[0,1]])
 
-    df_fake = pd.DataFrame(img_name_fake, columns=['image_name', 'target'])
+    df_photoshopped = pd.DataFrame(img_name_fake, columns=['image_name', 'target'])
 
     img_name_original = []
-    img_path_original = BASE_PATH + 'DataClasses' + os.path.sep + 'original'
-    img_path_original = glob.glob(os.path.join(img_path_original, "*.jpg"))
+    img_path_original = BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'original'
+    img_path_original = glob.glob(os.path.join(img_path_original, "*.*"))
     for img in img_path_original:
         img = img.replace('/', '')
-        img_name_original.append([img[58:], [1,0]])
+        img_name_original.append([img[67:], [1,0]])
 
-    df_original = pd.DataFrame(img_name_original, columns=['image_name', 'target'])
-    df_list =[df_fake,df_original]
+    df_original = pd.DataFrame(img_name_original, columns=['img_name', 'target'])
+    df_list =[df_photoshopped,df_original]
     df = pd.concat(df_list)
     # shuffle the DataFrame rows
     df = df.sample(frac=1)
-    return (df.count(),df.shape,df.head(10))
+    training_data = df.sample(frac=0.8, random_state=25)
+    testing_data = df.drop(training_data.index)
 
+    return (training_data.count(),training_data.shape,training_data.head(10),
+            testing_data.count(),testing_data.shape,testing_data.head(10))
 
+""""
 def create_train_data():
     training_data =[]
     for img in tqdm(os.listdir(TRAIN_DIR)):
@@ -216,18 +281,20 @@ for num, data in enumerate(test_data[:16]):
     y.axes.get_xaxis().set_visible(False)
     y.axes.get_yaxis().set_visble(False)
 plt.show()
-    
+"""
     
 #image_name = '141vnd'
 #image_name = '100d24'
 #image_name = '1085it'
 
-##img_data = get_photoshopped_images(image_name)
-##plot_image_set(img_data)
+#img_data = get_photoshopped_images(image_name)
+#plot_image_set(img_data)
 #original_count, fake_count = update_image_directories()
 #print(original_count)
 #print(fake_count)
 #simple version for working with CWD
 ## Under the photoshopped directory, there are thousands of subdirectories that corr
 
-print(target_process())
+augmentation_resampling()
+
+#print(target_process())
