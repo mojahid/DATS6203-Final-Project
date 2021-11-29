@@ -7,6 +7,12 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, hamming_loss, cohen_kappa_score, matthews_corrcoef
 import torch
 import torch.nn as nn
+from tqdm import tqdm
+import tensorflow as tf
+import tflearn
+from tflearn.layers.conv import conv_2d, max_pool_2d
+from tflearn.layers.core import input_data, dropout, fully_connected
+from tflearn.layers.estimator import regression
 import numpy as np
 from torch.utils import data
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -17,6 +23,15 @@ import glob
 from shutil import copy
 import matplotlib.pyplot as plt
 import os, os.path
+
+
+TRAIN_DIR ='train'
+TEST_DIR ='test1'
+N_EPOCH = 10
+IMG_SIZE =50
+LR= 1e-3
+MODEL_NAME= 'fake_img_classification'
+
 
 
 ## The data comes in two directories:
@@ -106,7 +121,7 @@ def target_process():
     img_path_fake = glob.glob(os.path.join(img_path_fake, "*.jpg"))
     for img in img_path_fake:
         img = img.replace('/', '')
-        img_name_fake.append([img[54:],0])
+        img_name_fake.append([img[54:],[0,1]])
 
     df_fake = pd.DataFrame(img_name_fake, columns=['image_name', 'target'])
 
@@ -115,16 +130,94 @@ def target_process():
     img_path_original = glob.glob(os.path.join(img_path_original, "*.jpg"))
     for img in img_path_original:
         img = img.replace('/', '')
-        img_name_original.append([img[58:], 1])
+        img_name_original.append([img[58:], [1,0]])
 
     df_original = pd.DataFrame(img_name_original, columns=['image_name', 'target'])
     df_list =[df_fake,df_original]
     df = pd.concat(df_list)
     # shuffle the DataFrame rows
     df = df.sample(frac=1)
+    return (df.count(),df.shape,df.head(10))
 
-    return (df)
 
+def create_train_data():
+    training_data =[]
+    for img in tqdm(os.listdir(TRAIN_DIR)):
+        path =os.path.join(TRAIN_DIR,img)
+        img_data= cv2.imread(path,cv2.IMREAD_GRAYSCALE)
+        img_data= cv2.resize(img_data,(IMG_SIZE))
+        training_data.append([np.argmin(img_data),create_label(img)])
+        (training_data)(frac=1)
+    np.save('training_data.npy',training_data)
+    return training_data
+
+def create_test_data():
+    testing_data =[]
+    for img in tqdm(os.listdir(TEST_DIR)):
+        path =os.path.join(TEST_DIR,img)
+        img_num =img.split('.')[0]
+        img_data= cv2.imread(path,cv2.IMREAD_GRAYSCALE)
+        img_data= cv2.resize(img_data,(IMG_SIZE))
+        testing_data.append([np.argmin(img_data),img_num])
+        (testing_data)(frac=1)
+    np.save('training_data.npy',testing_data)
+    return testing_data
+
+train_data =create_train_data()
+test_data =create_test_data()
+
+train = train_data[:-500]
+test = train_data[-500:]
+
+x_train =np.array([i[0] for i in train]).reshape(-1, IMG_SIZE,IMG_SIZE,1)
+y_train =[i[1] for i in train]
+x_test =np.array([i[0] for i in test]).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
+y_test =[i[1] for i in test]
+
+tf.reset_default_graph()
+convent =input_data(shape=[None,IMG_SIZE,IMG_SIZE,1], name='input')
+convent =conv_2d(convent, 32 ,5, activation='relu')
+convent =max_pool_2d(convent, 5)
+convent =conv_2d(convent, 64 ,5, activation='relu')
+convent =max_pool_2d(convent, 5)
+convent =conv_2d(convent, 128 ,5, activation='relu')
+convent =max_pool_2d(convent, 5)
+convent =conv_2d(convent, 64 ,5, activation='relu')
+convent =max_pool_2d(convent, 5)
+convent =conv_2d(convent, 32 ,5, activation='relu')
+convent =max_pool_2d(convent, 5)
+convent =fully_connected(convent, 1024, activation='relu')
+convent =dropout(convent, 0.8)
+convent =fully_connected(convent, 2, activation='softmax')
+convent =regression(convent, optimizer='adam', learning_rate=LR, Loss='categorical_crossentropy', name='targets')
+model = tflearn.DNN(convent, tensorboard_dir='log', tensorboard_verbose=0)
+model.fit({'input': x_train},{'targets':y_train},n_epoch=N_EPOCH, validation_set=({'input':x_test},{'targets':y_test}),
+          snapshot_step=500, show_metric=True, run_id=MODEL_NAME)
+
+fig =plt.figure(figsize=(16,12))
+
+for num, data in enumerate(test_data[:16]):
+
+    img_num =data [1]
+    img_data =data[0]
+
+    y= fig.add_subplot(4,4,num +1)
+    orig =img_data
+    data =img_data.reshape(IMG_SIZE,IMG_SIZE,1)
+    model_out = model.predict([data])[0]
+    
+    if np.argmax(model_out) ==1:
+        str_label= 'Orginal'
+    else:
+        str_label ='Fake'
+        
+    y.imshow(orig, cmap='gray')
+    plt.title(str_label)
+    y.axes.get_xaxis().set_visible(False)
+    y.axes.get_yaxis().set_visble(False)
+plt.show()
+    
+    
 #image_name = '141vnd'
 #image_name = '100d24'
 #image_name = '1085it'
