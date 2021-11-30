@@ -1,5 +1,7 @@
 ## Data Description
-As per[1] PS-Battles dataset which is gathered from a large community of image manipulation enthusiasts and provides a basis for media derivation and manipulation detection in the visual domain. The dataset consists of 102'028 images grouped into 11'142 subsets, each containing the original image as well as a varying number of manipulated derivatives
+As per[1] PS-Battles dataset which is gathered from a large community of image manipulation enthusiasts and provides a basis for media derivation and manipulation detection in the visual domain. The dataset consists of 102'028 images grouped into 11'142 subsets, each containing the original image as well as a varying number of manipulated derivatives.
+
+The original and photoshopped files contains mainly jpg images expect for few images in png format
 
 ## Download the data
 Data can be downloaded as per the intsruction here: https://github.com/dbisUnibas/PS-Battles
