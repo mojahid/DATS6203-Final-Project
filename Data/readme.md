@@ -4,6 +4,7 @@ As per[1] PS-Battles dataset which is gathered from a large community of image m
 Each original image has a correpsonding sub directory (having the same image name) under the photoshopped directory that contains the mainipulated version of this image.
 
 ![image](https://user-images.githubusercontent.com/34656794/144100309-5f2c88dd-6f63-4b32-bf0b-ce3d107a4cd5.png)
+
 As per the above example, photos 100c1k.jpg, 100d24.jpg and 100jh1.jpg under the originals folder will have a sub directory with the same name where corresponding photoshopped images are located.
 
 The following is an example of original photo "141vnd.jpg" (on the top) extracted from the original folder and its correspondig photoshopped versions under /photoshops/141vnd/
