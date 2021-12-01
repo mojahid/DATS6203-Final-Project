@@ -15,7 +15,7 @@ The original and photoshopped files contains mainly jpg images expect for few im
 
 ## Downloading the data
 Data can be downloaded as per the intsruction here: https://github.com/dbisUnibas/PS-Battles
-The github repo will provide intsructions to download two files (one for original and one for photoshopped images), For Ununtu (which is what we used in this project) the referenced Repo provides a download.sh file to download the data
+The github repo will provide intsructions to download two files (one for original and one for photoshopped images), For Ununtu (which is what we used in this project) the referenced Repo provides a download.sh file to download the data using the other two tsv files with image paths.
 
 
 [1] https://arxiv.org/abs/1804.04866
