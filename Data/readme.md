@@ -13,9 +13,37 @@ The following is an example of original photo "141vnd.jpg" (on the top) extracte
 
 The original and photoshopped files contains mainly jpg images expect for few images in png format. 
 
-## Download the data
+## Downloading the data
 Data can be downloaded as per the intsruction here: https://github.com/dbisUnibas/PS-Battles
 The github repo will provide intsructions to download two files (one for original and one for photoshopped images), For Ununtu (which is what we used in this project) the referenced Repo provides a download.sh file to download the data
 
 
 [1] https://arxiv.org/abs/1804.04866
+
+
+## Checking the data
+After the download, the counts of downloaded files can be retrieved via the following commands (worked with ubuntu):
+
+```
+/originals$ ls | wc -l
+
+```
+Running this should show the following (might change if more/less erros found during the download process):
+11120
+
+To check the files under the photoshops folder, you can run the following loop:
+```
+/photoshops$find . -maxdepth 1 -type d | while read -r dir
+> do printf "%s:\t" "$dir"; find "$dir" -type f | wc -l; done
+
+```
+This will provide the total as well as image per each subdirectory.
+Running this should show the following (might change if more/less erros found during the download process):
+90870
+./10092l:       4
+./100c1k:       1
+./100d24:       6
+./100jh1:       15
+./100qo2:       11
+./100yc6:       3
+./101453:       3
