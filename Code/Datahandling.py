@@ -2,6 +2,7 @@
 ## imports
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.model_selection import train_test_split
 import cv2
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, hamming_loss, cohen_kappa_score, matthews_corrcoef
@@ -30,7 +31,7 @@ import Image_Augmentation
 TRAIN_DIR ='train'
 TEST_DIR ='test1'
 N_EPOCH = 10
-IMG_SIZE =50
+IMG_SIZE =200
 LR= 1e-3
 MODEL_NAME= 'fake_img_classification'
 
@@ -177,62 +178,90 @@ def process_filter_on_data(filter,directory_name):
 
 
 def target_process():
-    img_name_fake = []
-    img_path_fake = BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'photoshopped'
-    img_path_fake = glob.glob(os.path.join(img_path_fake, "*.*"))
-    for img in img_path_fake:
+    img_name_photoshopped = []
+    img_dir_photoshopped = BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'photoshopped'
+    img_path_photoshopped = glob.glob(os.path.join(img_dir_photoshopped, "*.*"))
+    for img in img_path_photoshopped:
         img = img.replace('/', '')
-        img_name_fake.append([img[71:],[0,1]])
+        img_name_photoshopped.append([img[71:],0])
 
-    df_photoshopped = pd.DataFrame(img_name_fake, columns=['image_name', 'target'])
+    df_photoshopped_all = pd.DataFrame(img_name_photoshopped, columns=['img_name', 'target'])
+    # shuffle the DataFrame rows
+    df_photoshopped_all = df_photoshopped_all.sample(frac=1) 
+    df_photoshopped = df_photoshopped_all.head(10000)
 
     img_name_original = []
-    img_path_original = BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'original'
-    img_path_original = glob.glob(os.path.join(img_path_original, "*.*"))
+    img_dir_original = BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'original'
+    img_path_original = glob.glob(os.path.join(img_dir_original, "*.*"))
     for img in img_path_original:
         img = img.replace('/', '')
-        img_name_original.append([img[67:], [1,0]])
+        img_name_original.append([img[67:], 1])
 
-    df_original = pd.DataFrame(img_name_original, columns=['img_name', 'target'])
+    df_original_all = pd.DataFrame(img_name_original, columns=['img_name', 'target'])
+    
+    # shuffle the DataFrame rows
+    df_original_all = df_original_all.sample(frac=1)
+    df_original = df_original_all.head(10000)
+    
     df_list =[df_photoshopped,df_original]
     df = pd.concat(df_list)
     # shuffle the DataFrame rows
-    df = df.sample(frac=1)
-    training_data = df.sample(frac=0.8, random_state=25)
-    testing_data = df.drop(training_data.index)
+    df = df.sample(frac=1)  # df count :20000
 
-    return (training_data.count(),training_data.shape,training_data.head(10),
-            testing_data.count(),testing_data.shape,testing_data.head(10))
+    training_data, testing_data = train_test_split(df,test_size=0.20, random_state=33)
 
-""""
+    training_data = df.sample(frac=0.8, random_state=25) # training count 16000
+    #training_data['split']='train'
+
+    testing_data = df.drop(training_data.index) # testing count 3643
+    #testing_data['split']='test'
+
+    df_data = [training_data, testing_data]
+    df_model =pd.concat(df_data)
+
+    df_model.to_excel('data_model.xlsx')
+
+    return (training_data,testing_data)
+
+    #eturn (training_data.count(),training_data.shape,training_data.head(10),
+     #   testing_data.count(),testing_data.shape,testing_data.head(10))
+    #return (df_photoshopped.count(), df.columns,df.head(10))
+    #return (df_original_all.count(),df_original.count(),df_photoshopped_all.count(),
+           # df_photoshopped.count(),df.count())
+
+
+
+
+x_train, y_test= target_process()
+IMG_DIR = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/final/"
+
 def create_train_data():
-    training_data =[]
-    for img in tqdm(os.listdir(TRAIN_DIR)):
-        path =os.path.join(TRAIN_DIR,img)
-        img_data= cv2.imread(path,cv2.IMREAD_GRAYSCALE)
-        img_data= cv2.resize(img_data,(IMG_SIZE))
-        training_data.append([np.argmin(img_data),create_label(img)])
-        (training_data)(frac=1)
-    np.save('training_data.npy',training_data)
+    training_data = []
+    for img in tqdm(os.listdir(IMG_DIR)):
+        if img in x_train['img_name'].tolist():
+            path = os.path.join(IMG_DIR,img)
+            img = cv2.imread(path,cv2.IMREAD_GRAYSCALE)
+            img = cv2.resize(img, (IMG_SIZE,IMG_SIZE))
+            label= x_train['target']
+            training_data.append([np.array(img),np.array(label)])
     return training_data
 
 def create_test_data():
     testing_data =[]
-    for img in tqdm(os.listdir(TEST_DIR)):
-        path =os.path.join(TEST_DIR,img)
-        img_num =img.split('.')[0]
-        img_data= cv2.imread(path,cv2.IMREAD_GRAYSCALE)
-        img_data= cv2.resize(img_data,(IMG_SIZE))
-        testing_data.append([np.argmin(img_data),img_num])
-        (testing_data)(frac=1)
-    np.save('training_data.npy',testing_data)
+    for img in tqdm(os.listdir(IMG_DIR)):
+        if img in y_test['img_name'].tolist():
+            path = os.path.join(IMG_DIR,img)
+            img = cv2.imread(path,cv2.IMREAD_GRAYSCALE)
+            img = cv2.resize(img, (IMG_SIZE,IMG_SIZE))
+            label= y_test['target']
+            testing_data.append([np.array(img),np.array(label)])
     return testing_data
 
-train_data =create_train_data()
-test_data =create_test_data()
+train =create_train_data()
+test =create_test_data()
 
-train = train_data[:-500]
-test = train_data[-500:]
+#train = train_data[:-500]
+#test = train_data[-500:]
 
 x_train =np.array([i[0] for i in train]).reshape(-1, IMG_SIZE,IMG_SIZE,1)
 y_train =[i[1] for i in train]
@@ -256,12 +285,14 @@ convent =dropout(convent, 0.8)
 convent =fully_connected(convent, 2, activation='softmax')
 convent =regression(convent, optimizer='adam', learning_rate=LR, Loss='categorical_crossentropy', name='targets')
 model = tflearn.DNN(convent, tensorboard_dir='log', tensorboard_verbose=0)
+
 model.fit({'input': x_train},{'targets':y_train},n_epoch=N_EPOCH, validation_set=({'input':x_test},{'targets':y_test}),
           snapshot_step=500, show_metric=True, run_id=MODEL_NAME)
 
+"""
 fig =plt.figure(figsize=(16,12))
 
-for num, data in enumerate(test_data[:16]):
+for num, data in enumerate(test[:16]):
 
     img_num =data [1]
     img_data =data[0]
@@ -295,6 +326,47 @@ plt.show()
 #simple version for working with CWD
 ## Under the photoshopped directory, there are thousands of subdirectories that corr
 
-augmentation_resampling()
+#augmentation_resampling()
 
-#print(target_process())
+##print(target_process())
+
+#data_model=target_process()
+
+"""
+data_model=pd.DataFrame(target_process(), columns=['img_name','target','split'])
+
+xdf_dset = data_model[data_model["split"] == 'train'].copy()
+
+print(xdf_dset.count())
+print(xdf_dset.shape)
+print(xdf_dset.columns())
+print(xdf_dset.head(10))
+
+
+#print (data_model.shape)
+#print (data_model['split'].head(10))
+
+#print(data_model.count())
+#print(data_model.head(10))
+"""
+"""
+model_data_path=BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'final'
+print(model_data_path)
+x_train=[]
+x_test=[]
+for img in os.listdir(model_data_path):
+    if data_model['split']=='train':
+        img_arr=cv2.imread(model_data_path)
+        img_arr=cv2.resize(img_arr,(224,224))
+        x_train.append(img_arr)
+    else:
+        x_test.append(img_arr)
+
+train_x=np.array(x_train)
+test_x=np.array(x_test)
+
+train_x=train_x/255.0
+test_x=test_x/255.0
+
+print(train_x[1])
+"""
