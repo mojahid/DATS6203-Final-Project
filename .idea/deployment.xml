@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="AWS" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="AWS2" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
-      <paths name="AWS">
+      <paths name="AWS1">
         <serverdata>
           <mappings>
             <mapping deploy="/home/ubuntu/MLP/DATS6203-Final-Project" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="AWS2">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/ubuntu/DATS6203-Final-Project" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

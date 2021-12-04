@@ -1,4 +1,3 @@
-
 ## imports
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -28,8 +27,6 @@ import matplotlib.pyplot as plt
 import os, os.path
 import Image_Augmentation
 
-
-
 TRAIN_DIR ='train'
 TEST_DIR ='test1'
 N_EPOCH = 10
@@ -56,7 +53,7 @@ MODEL_NAME= 'fake_img_classification'
 ## 2- Few images has 0 or 1 kb size which is empty
 ##
 
-BASE_PATH = '/home/ubuntu/MLP/DATS6203-Final-Project/Data/'
+BASE_PATH = '/home/ubuntu/DATS6203-Final-Project/Data/'
 
 def get_photoshopped_images(image_name):
     """ This function retrieve photoshopped images that corresponds to an original image.
@@ -107,25 +104,6 @@ def plot_image_set(img_data):
     Keyword arguments:
     img_data -- List of images coming get_photoshopped_images()
     """
-def update_image_directories():
-    dir_src = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/photoshops/"
-    dir_dst = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/photoshopped/"
-    original_count = 0
-    fake_count = 0
-    for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
-        if (os.path.getsize(file) > 12*1024) and (cv2.imread(file) is not None):
-            copy(file, dir_dst)
-            fake_count = fake_count + 1
-    dir_src = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/originals/"
-    dir_dst = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/original/"
-    for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
-        if (os.path.getsize(file) > 12 * 1024) and (cv2.imread(file) is not None):
-            copy(file, dir_dst)
-            original_count = original_count + 1
-    return original_count, fake_count
-
-
-
 
 def update_image_directories():
     dir_src = r"/home/ubuntu/DATS6203-Final-Project/Data/photoshops/"
@@ -146,7 +124,7 @@ def update_image_directories():
     return original_count, fake_count
 
 def augmentation_resampling():
-    dir_src = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/original/"
+    dir_src = r"/home/ubuntu/DATS6203-Final-Project/Data/Classes01/original/"
     for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
         print(file)
         img = Image_Augmentation.flip_crop_image(cv2.imread(file), -1)
@@ -176,11 +154,11 @@ def create_ela(img):
     return diff
 
 def process_filter_on_data(filter,directory_name):
-    dir_src_1 = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/original/"
-    dir_dst_1 = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses" + directory_name +"/original/"
+    dir_src_1 = r"/home/ubuntu/DATS6203-Final-Project/Data/Classes01/original/"
+    dir_dst_1 = r"/home/ubuntu/DATS6203-Final-Project/Data" + directory_name +"/original/"
 
-    dir_src_2 = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/photoshopped/"
-    dir_dst_2 = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/" + directory_name + "/photoshopped/"
+    dir_src_2 = r"/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/"
+    dir_dst_2 = r"/home/ubuntu/DATS6203-Final-Project/Data/" + directory_name + "/photoshopped/"
     for file in glob.iglob('%s/**/*.*' % dir_src_1, recursive=True):
         filename = os.path.basename(file)
         filename = dir_dst_1 + filename
@@ -197,121 +175,16 @@ def process_filter_on_data(filter,directory_name):
         elif filter == 'noise':
             cv2.imwrite(filename, create_noise_analysis(cv2.imread(file)))
 
+#image_name = '141vnd'
+image_name = '10j990'
+#image_name = '1085it'
 
-def target_process():
-    img_name_photoshopped = []
-    img_dir_photoshopped = BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'photoshopped'
-    img_path_photoshopped = glob.glob(os.path.join(img_dir_photoshopped, "*.*"))
-    for img in img_path_photoshopped:
-        img = img.replace('/', '')
-        label = [0, 1]
-        img_name_photoshopped.append([img[71:],label])
-
-    df_photoshopped_all = pd.DataFrame(img_name_photoshopped, columns=['img_name', 'label'])
-    # shuffle the DataFrame rows
-    df_photoshopped_all = df_photoshopped_all.sample(frac=1) 
-    df_photoshopped = df_photoshopped_all.head(100)
-
-    img_name_original = []
-    img_dir_original = BASE_PATH + 'DataClasses/Classes01' + os.path.sep + 'original'
-    img_path_original = glob.glob(os.path.join(img_dir_original, "*.*"))
-    for img in img_path_original:
-        img = img.replace('/', '')
-        label= [1,0]
-        img_name_original.append([img[67:], label])
-
-    df_original_all = pd.DataFrame(img_name_original, columns=['img_name', 'label'])
-    
-    # shuffle the DataFrame rows
-    df_original_all = df_original_all.sample(frac=1)
-    df_original = df_original_all.head(100)
-    
-    df_list =[df_photoshopped,df_original]
-    df = pd.concat(df_list)
-    # shuffle the DataFrame rows
-    df = df.sample(frac=1)  # df count :20000
-
-    training_data, testing_data = train_test_split(df,test_size=0.20, random_state=33)
-
-    training_data = df.sample(frac=0.8, random_state=25) # training count 16000
-    testing_data = df.drop(training_data.index) # testing count 3643
-
-    df_data = [training_data, testing_data]
-    df_model =pd.concat(df_data)
-
-    df_model.to_excel('data_model.xlsx')
-
-    return (training_data,testing_data)
+img_data = get_photoshopped_images(image_name)
 
 
-x_train, y_test= target_process()
-IMG_DIR = r"/home/ubuntu/MLP/DATS6203-Final-Project/Data/DataClasses/Classes01/final/"
-
-def create_train_data():
-    training_data = []
-    for img in tqdm(os.listdir(IMG_DIR)):
-        if img in x_train['img_name'].tolist():
-            path = os.path.join(IMG_DIR,img)
-            img = cv2.imread(path,cv2.IMREAD_GRAYSCALE)
-            img = cv2.resize(img, (IMG_SIZE,IMG_SIZE))
-            label= x_train['label']
-            training_data.append([np.array(img),np.array(label)])
-    shuffle(training_data)
-    np.save('train_data.npy', training_data)
-    return training_data
-
-def create_test_data():
-    testing_data =[]
-    for img in tqdm(os.listdir(IMG_DIR)):
-        if img in y_test['img_name'].tolist():
-            path = os.path.join(IMG_DIR,img)
-            img = cv2.imread(path,cv2.IMREAD_GRAYSCALE)
-            img = cv2.resize(img, (IMG_SIZE,IMG_SIZE))
-            label= y_test['label']
-            testing_data.append([np.array(img),np.array(label)])
-    return testing_data
-
-
-import tflearn
-from tflearn.layers.conv import conv_2d, max_pool_2d
-from tflearn.layers.core import input_data, dropout, fully_connected
-from tflearn.layers.estimator import regression
-
-convnet = input_data(shape=[None, IMG_SIZE, IMG_SIZE, 1], name='input')
-
-convnet = conv_2d(convnet, 32, 5, activation='relu')
-convnet = max_pool_2d(convnet, 5)
-
-convnet = conv_2d(convnet, 64, 5, activation='relu')
-convnet = max_pool_2d(convnet, 5)
-
-convnet = fully_connected(convnet, 1024, activation='relu')
-convnet = dropout(convnet, 0.8)
-
-convnet = fully_connected(convnet, 2, activation='softmax')
-convnet = regression(convnet, optimizer='adam', learning_rate=LR, loss='categorical_crossentropy', name='targets')
-
-model = tflearn.DNN(convnet, tensorboard_dir='log')
-
-if os.path.exists('{}.meta'.format(MODEL_NAME)):
-    model.load(MODEL_NAME)
-    print('model loaded!')
-
-
-train_data =create_train_data()
-
-train = train_data[:-50]
-test = train_data[-50:]
-
-
-
-X = np.array([i[0] for i in train]).reshape(-1, IMG_SIZE, IMG_SIZE,1)
-Y = [i[1] for i in train]
-print('********************************')
-print('Y', Y[0])
-
-x_test =np.array([i[0] for i in test]).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
-y_test =[i[1] for i in test]
-
-model.fit({'input': X}, {'targets': Y}, n_epoch=3, validation_set=({'input': x_test}, {'targets': y_test}),
-  snapshot_step=500, show_metric=True, run_id=MODEL_NAME)
+#augmentation_resampling()
+plot_image_set(img_data)
+#original_count, fake_count = update_image_directories()
+#print(original_count)
+#print(fake_count)
+# simple version for working with CWD

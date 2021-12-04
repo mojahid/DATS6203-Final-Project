@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="0279eb83-76d4-4d6b-a36e-896e1c96b027" name="AWS2 (project level)">
+        <fileTransfer rootFolder="/home/ubuntu/DATS6203-Final-Project" accessType="SFTP" host="3.82.206.73" port="22" sshConfigId="a0bdb01d-6cbb-4faf-ad8f-4b7de4b41592" sshConfig="AWS2" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
