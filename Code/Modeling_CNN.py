@@ -86,6 +86,7 @@ model = Sequential([
   layers.Dense(128, activation='relu'),
   layers.Dense(1, activation='sigmoid')
 ])
+
 model.compile(optimizer='adagrad',
               loss=tf.keras.losses.BinaryCrossentropy(),
               metrics=['accuracy'])

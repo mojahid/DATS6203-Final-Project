@@ -58,7 +58,9 @@ data_augmentation = keras.Sequential(
     layers.RandomZoom(0.1),
   ])
 
-base_model = tf.keras.applications.VGG16(weights = 'imagenet', include_top = False, input_shape = (img_height, img_width, 3))
+base_model = tf.keras.applications.VGG16(weights = 'imagenet', include_top = False,
+                                         input_shape = (img_height, img_width, 3))
+
 for layer in base_model.layers:
   layer.trainable = False
 
