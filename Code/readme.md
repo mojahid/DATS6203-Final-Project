@@ -8,7 +8,7 @@ The code files are as follows:
 * Hard_Voting_Committee.py
 * MLP_Ensembling.py
 
-The above files has the right order to perform the following function after the raw data is downloaded as per the instrcutions in the Data folder.
+The above files has the right order to perform a sequential flow after the raw data is downloaded as per the instrcutions in the Data folder.
 The code files are modular and will run independenly based on data generated from other files. Before digging into the code, please read the readme file under the Data folder first.
 
 ## Background
