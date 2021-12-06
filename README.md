@@ -1,7 +1,7 @@
 
 # DATS6203 Final Project
 
-GWU Machine Learning II Final Project - Detected Fake Images
+GWU Machine Learning II Final Project - Detecting Fake Images
 
 This project is owned by Mina Hanna & Mojahid Osman. Below are the folders of this project:
 
