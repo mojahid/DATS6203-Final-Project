@@ -27,8 +27,7 @@ such assessment, two separate python files were created Modeling_CNN.py and Mode
 based on one or more datasets created by the preprocessing steps and the Modeling_Pretrained_CNN.py is used to configure, compile and train pre-trained models on similar dataset.
 Each model created by any of these files will be saved for furthet analysis and usage.
 
-The outcome of Data preprocessing and modeling will different saved models with various perfromance. To evaluate each model, a dedicated Load_Predict_Measure.py file is created to 
-load one of the save models from the modeling phase and perform the necessary steps to predict and measure its performance.
+The outcome of Data preprocessing and modeling will different saved models with various perfromance. To evaluate each model, a dedicated Load_Predict_Measure.py file is created to load one of the save models from the modeling phase and perform the necessary steps to predict and measure its performance.
 
 Finally to achieve the best performance, the project will elect the top models to perform model ensembling which is performed by the following two different methods:
 * Hard Voting: implemented in Hard_Voting_Committee.py where final decision about the photo evaluation (original or photoshopped) will be decided based on majority model voting
@@ -74,4 +73,39 @@ The following should be followed to complete the dataset setup according to the 
 
 ## CNN Modeling
 
+Both Modeling_CNN.py and Modeling_Pretrained_CNN.py are based on Tensorflow classes and using image_dataset_from_directory to automatically create the dataset from directories 
+created in the pre-processing step. At the end of the training, matplotlib is used to plot training history of loss and accuracy across the epochs.
 
+Key Configurations:
+1. Using Adam as an optimizer with small learning rate of 0.0001 (which is adapted by the algorithm) was the best perfromance of the model and known for its computational efficiencies with images
+2. Convolutional Layers are using ReLu as activation fucntion which is a non-linear function that corresponds to the non-linar nature of the images
+3. Model uses Sigmoid with the last dense layer with one output and binary crossentropy as loss function (also tried Softmax, dense layer with 2 output and catigorical crossentropy)
+4. Batch size is set to 48 to minimize any memory allocation problems with large images and mintain a good rate of updating the weight based on avg batch gradient
+5. Batch normalization is used to keep output close to mean of 0 and variance of 1 which prevents the saturations of the activation function
+6. Maxpooling is used to downsample the size of the image/feature maps moving deeper within the network
+7. In the Modeling_CNN, augmentation is used as a layer to utilize GPU speed
+8. Image pixels are rescaled in a seperate layer in the model
+9. Using early stopping is configured in the model to avoid overfitting
+10. Pre-trained model used is VGG19
+11. To increase the generalization likelihood and dropout layer to drop 20% of the dense layer neurons  
+12. Models are saved for further processing, usage and analysis
+13. Training history will be plotted to show accurcy and loss throughout the epochs
+
+![myplot_best_CNN_ELA](https://user-images.githubusercontent.com/34656794/144795616-120ac089-6911-42f9-a487-e4cd1de5e02b.png)
+
+
+## Evaluation
+
+There is an dedicated file to load, predict and measure the model performace. The model performace metrics used are using SK-learn to show accuracy, precision and recall for individual classes as well as weighted average based on the calculated confusion matrix. Also sea born package is used to display the confusion matrix as a heatmap.
+
+![myplot_CM_Model11](https://user-images.githubusercontent.com/34656794/144795883-b300cca2-7b5f-44f2-8f51-77cea3a22e92.png)
+
+## Ensembling
+
+Finally after electing the best performing models, Hard_Voting_Committee.py and MLP_ensembling.py can be used to stack the models and pick the best performing output.
+Both files contains the following:
+
+1. Functions to load test data and prepare dataframes that will be used to concat the different model output
+2. Function to load and evaluate saved model and populate its predictions in the dataframes
+3. Using hard voting or MLP to evaluate the best output out of the stacked models
+4. Display metrics and measrues for the combined/stacked models
