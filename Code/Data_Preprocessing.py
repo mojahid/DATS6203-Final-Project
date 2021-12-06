@@ -34,11 +34,6 @@ import Image_Augmentation
 ##                     |--Image1_0.jpg
 ##                     |--Image1_1.jpg
 
-## problem with the data:
-## 1- Size ranges between 10K and 13mb
-## 2- Few images has 0 or 1 kb size which is empty
-##
-
 
 BASE_PATH = '/home/ubuntu/DATS6203-Final-Project/Data/'
 
@@ -91,7 +86,18 @@ def plot_image_set(img_data):
     Keyword arguments:
     img_data -- List of images coming get_photoshopped_images()
     """
+
 def update_image_directories():
+    """ This function copies images from the original download folder and do the following:
+    1- validate that image is readable before copying
+    2- Copy readable and reasonably sized images from orignals folder to 'original' folder
+    3- Copy all readable and reasonably sized photoshopped images in the sub-folders under one folder "photoshopped"
+    4- Due to very big size of the dataset and the imbalance between original classes (~10K images) and photoshopped
+       classes (~90K images), only 10K of the photoshopped images will be copied randomally
+    Keyword arguments:
+    img_data -- List of images coming get_photoshopped_images()
+    """
+    # This function requires the folders to be set before running
     dir_src = r"/home/ubuntu/DATS6203-Final-Project/Data/photoshops/"
     dir_dst = r"/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/"
     original_count = 0
@@ -109,6 +115,7 @@ def update_image_directories():
             original_count = original_count + 1
     return original_count, fake_count
 
+# This function will not be used as augmentation is used as a layer in the CNN model
 def augmentation_resampling():
     dir_src = r"/home/ubuntu/MLP/FinalProject/Data/Classes01/original/"
     for file in glob.iglob('%s/**/*.*' % dir_src, recursive=True):
@@ -127,6 +134,7 @@ def augmentation_resampling():
         cv2.imwrite(new_name, img)
     return
 
+# Delete files with PNG extenstion
 def del_png_files(path):
     counter = 0
     for file in glob.iglob('%s/**/*.*' % path, recursive=True):
@@ -136,19 +144,34 @@ def del_png_files(path):
     return counter
 
 def create_noise_analysis(img):
+    """ This creates a new image that contains the noise of an image by smoothing the image via a Denoising filter
+    and then subtract the denoised version from the original to keep only the noise
+    Keyword arguments:
+    img -- image to be analyzed for noise
+    """
     #img2 = cv2.medianBlur(img, 3)
     img2 = cv2.fastNlMeansDenoisingColored(img, h=1)
     return img - img2
 
 def create_ela(img):
+    """ This creates a new image that contains the ELA of an image by saving it as jpg with different quality and
+    then retrieve a weighted absolute differentce between the original and saved image
+    Keyword arguments:
+    img -- image to be analyzed for Error Level Analysis
+    """
     cv2.imwrite("temp.jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 95])
     img2 = cv2.imread("temp.jpg")
     cv2.imwrite("temp.jpg", img2, [cv2.IMWRITE_JPEG_QUALITY, 90])
     img2 = cv2.imread("temp.jpg")
     diff = 15 * cv2.absdiff(img, img2)
     return diff
-##
+
 def create_luminance_grad(img):
+    """ This creates a new image that contains the Gradient of an image by convoluting a vertical and horizontal kernels
+    on the original image (Sobel 3x3) and then calculate the absolute value of the gradient magnetiude
+    Keyword arguments:
+    img -- image to be analyzed for Gradient Analysis
+    """
     scale = 1
     delta = 0
     ddepth = cv2.CV_16S
@@ -176,20 +199,34 @@ def create_luminance_grad(img):
     return temp
 
 def process_filter_on_data(filter,directory_name):
+    """ This functions apply the filer specified in the input parameter on the images in the dir_scr_1 and dir_src_2
+    directories and copy the result with the same structure under the directory_name parameter
+    NOTE: dir_src_1 and dir_src_2 has to be changed between Classes0x and Test0x manually depending if a test or train
+    dataset is used.
+    Keyword arguments:
+    filter -- ela, noise or lum
+    directory_name -- name of the directory where the new filtered images will be copied to and it has to be created
+    manually in the file system
+    """
+    # Classes vs Test depending on Train or Test dataset
+    #dir_src_1 = r"/home/ubuntu/DATS6203-Final-Project/Data/Classes01/original/"
     dir_src_1 = r"/home/ubuntu/DATS6203-Final-Project/Data/Test01/original/"
     dir_dst_1 = r"/home/ubuntu/DATS6203-Final-Project/Data/" + directory_name +"/original/"
 
-    dir_src_2 = r"/home/ubuntu/DATS6203-Final-Project/Data/Test02/photoshopped/"
+    #dir_src_2 = r"/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/"
+    dir_src_2 = r"/home/ubuntu/DATS6203-Final-Project/Data/Test01/photoshopped/"
     dir_dst_2 = r"/home/ubuntu/DATS6203-Final-Project/Data/" + directory_name + "/photoshopped/"
-    #for file in glob.iglob('%s/**/*.*' % dir_src_1, recursive=True):
-    #    filename = os.path.basename(file)
-    #    filename = dir_dst_1 + filename
-    #    if filter == 'ela':
-    #        cv2.imwrite(filename,create_ela(cv2.imread(file)))
-    #    elif filter == 'noise':
-    #        cv2.imwrite(filename, create_noise_analysis(cv2.imread(file)))
-    #    elif filter =='lum':
-    #        cv2.imwrite(filename, create_luminance_grad(cv2.imread(file)))
+
+    # Iterate all files, apply filter and write in the specified directory
+    for file in glob.iglob('%s/**/*.*' % dir_src_1, recursive=True):
+        filename = os.path.basename(file)
+        filename = dir_dst_1 + filename
+        if filter == 'ela':
+            cv2.imwrite(filename,create_ela(cv2.imread(file)))
+        elif filter == 'noise':
+            cv2.imwrite(filename, create_noise_analysis(cv2.imread(file)))
+        elif filter =='lum':
+            cv2.imwrite(filename, create_luminance_grad(cv2.imread(file)))
 
     for file in glob.iglob('%s/**/*.*' % dir_src_2, recursive=True):
         filename = os.path.basename(file)
@@ -202,30 +239,36 @@ def process_filter_on_data(filter,directory_name):
             cv2.imwrite(filename, create_luminance_grad(cv2.imread(file)))
 
 #image_name = '141vnd'
-image_name = '100d24'
 #image_name = '1085it'
+image_name = '100d24'
 
-#img_data = get_photoshopped_images(image_name)
+# Get the photoshop images for a specific original image
+img_data = get_photoshopped_images(image_name)
 
+# Display the orginal and photoshopped images
+plot_image_set(img_data)
 
-#augmentation_resampling()
-#plot_image_set(img_data)
+# run the below once for the first copy from downloaded folders to the new structure
 #original_count, fake_count = update_image_directories()
 #print(original_count)
 #print(fake_count)
 
+# Delete PNG images
+#print(del_png_files('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/'))
+
+
+# run the below for each filter and on each dataset
 process_filter_on_data('noise', 'Test03')
-org_jpegCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/original/',"*.jpg"))
+
+#org_jpegCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/original/',"*.jpg"))
 #print(org_jpegCounter)
-org_pngCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/original/',"*.png"))
+#org_pngCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/original/',"*.png"))
 #print(org_pngCounter)
-ps_jpegCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/',"*.jpg"))
+#ps_jpegCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/',"*.jpg"))
 #print(ps_jpegCounter)
-ps_pngCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/',"*.png"))
+#ps_pngCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/',"*.png"))
 #print(ps_pngCounter)
 
-
-## Under the photoshopped directory, there are thousands of subdirectories that corr
 
 #img_data2 = []
 #img1 = cv2.imread('/home/ubuntu/MLP/FinalProject/Data/photoshops/100qo2/c69hhbs_0.jpg')
@@ -240,6 +283,7 @@ ps_pngCounter = len(glob.glob1('/home/ubuntu/DATS6203-Final-Project/Data/Classes
 
 #plot_image_set(img_data2)
 
+# Some image retrieval for documentation
 img_data3 = []
 img1 = cv2.imread('/home/ubuntu/DATS6203-Final-Project/Data/photoshops/106r2b/c6axsh8_0.jpg')
 img_org = cv2.imread('/home/ubuntu/DATS6203-Final-Project/Data/originals/106r2b.jpg')
@@ -254,5 +298,4 @@ img_data3.append(create_luminance_grad(img_org))
 img_data3.append(create_luminance_grad(img1))
 #img_data3.append(img1)
 #plot_image_set(img_data3)
-#print('*************')
-#print(del_png_files('/home/ubuntu/DATS6203-Final-Project/Data/Classes01/photoshopped/'))
+
